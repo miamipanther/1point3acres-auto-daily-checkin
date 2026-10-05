@@ -31,19 +31,36 @@ jobs:
 
       - name: 安装依赖
         run: pip install -r requirements.txt
-
       - name: 生成 config.toml
+        env:
+          RAW_COOKIES: ${{ secrets.COOKIES }}
+          RAW_CAPTCHA: ${{ secrets.CAPTCHA_KEY }}
         run: |
-          cat > config.toml <<EOF
-          cookie = "${{ secrets.COOKIES }}"
-          captcha_key = "${{ secrets.CAPTCHA_KEY }}"
-          username = "${{ env.USERNAME }}"
-          password = "${{ secrets.PASSWORD }}"
+          python -c '
+          import os
+
+          cookie_val = os.environ.get("RAW_COOKIES", "").strip()
+          captcha_val = os.environ.get("RAW_CAPTCHA", "").strip()
+
+          # Strip away any accidental "Cookie: " label copied from Safari
+          if cookie_val.lower().startswith("cookie:"):
+              cookie_val = cookie_val[7:].strip()
+
+          # Escape backslashes and double quotes safely inside Python logic
+          escaped_cookie = cookie_val.replace("\\", "\\\\").replace("\"", "\\\"")
+
+          toml_content = f"""cookie = "{escaped_cookie}"
+          captcha_key = "{captcha_val}"
+          username = ""
+          password = ""
           timeout  = 20
           min_wait = 1.0
           max_wait = 3.0
-          EOF
-      
+          """
+
+          with open("config.toml", "w", encoding="utf-8") as f:
+              f.write(toml_content)
+          '
       - name: 输出配置 log
         run: cat config.toml
 
