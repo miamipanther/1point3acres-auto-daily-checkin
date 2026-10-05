@@ -1,24 +1,14 @@
-# .github/workflows/daily_checkin.yml
 name: 每日签到 - 可扩展为多账户
 
 on:
   schedule:
     # UTC 每日 00:30，折合北京时间 08:30
     - cron: '30 0 * * *'
-  workflow_dispatch:  # 允许你手动点 Run workflow
+  workflow_dispatch:  # Allows manual runs
 
 jobs:
   sign:
     runs-on: ubuntu-latest
-
-    # 如果需要多账户支持，可以取消下面的注释，并在 GitHub Actions 环境中配置对应的 Secrets
-    ### 多账户支持
-    # strategy:
-    #   matrix:
-    #     env: [account1env, account2env, account3env]  # 可根据需要添加更多账户/GitHub Actions 环境
-
-    # # 动态切换到 matrix.env 对应的 Environment
-    # environment: ${{ matrix.env }}
 
     steps:
       - name: 检出代码
@@ -31,40 +21,17 @@ jobs:
 
       - name: 安装依赖
         run: pip install -r requirements.txt
-      - name: 生成 config.toml
-        env:
-          RAW_COOKIES: ${{ secrets.COOKIES }}
-          RAW_CAPTCHA: ${{ secrets.CAPTCHA_KEY }}
-        run: |
-          python -c '
-          import os
-
-          cookie_val = os.environ.get("RAW_COOKIES", "").strip()
-          captcha_val = os.environ.get("RAW_CAPTCHA", "").strip()
-
-          # Strip away any accidental "Cookie: " label copied from Safari
-          if cookie_val.lower().startswith("cookie:"):
-              cookie_val = cookie_val[7:].strip()
-
-          # Escape backslashes and double quotes safely inside Python logic
-          escaped_cookie = cookie_val.replace("\\", "\\\\").replace("\"", "\\\"")
-
-          toml_content = f"""cookie = "{escaped_cookie}"
-          captcha_key = "{captcha_val}"
-          username = ""
-          password = ""
-          timeout  = 20
-          min_wait = 1.0
-          max_wait = 3.0
-          """
-
-          with open("config.toml", "w", encoding="utf-8") as f:
-              f.write(toml_content)
-          '
-      - name: 输出配置 log
-        run: cat config.toml
 
       - name: 执行签到脚本
+        env:
+          # Directly map secrets into execution runtime memory
+          COOKIES: ${{ cf_clearance=l0MbWVmjx78UhIz0RTvqM_tufMpX2EhJfVAyfiPef.k-1791241783-1.2.1.1-mGsOTNSVRMi67h8yoX1_NwYHUZowVs3cL0oW3HZ1psb9pLIQaaNj.hYV.gqro4mGtRLo8sBNwM5XPKSrWYiY0IANqgfomzwSM2ri7vsfdPwgln6Dpi_7sdiMLOXfg5CNSd6bIqLpQMo6ix.2WNrohhRK.U2WCkV_yA1vNmQzrG8VNK0zDVCtm4OPAavrtxhovjf5mNP8rGKFmHyvO05ugUcoWLj9Yaf0DKNPUShwbXyt1JA0SseentaM2wKR_Go.Sw21ixRH5ptgiwVEuUOY8Kehl2HA4mN7CyfWWXkHM1yNWrVPLYoRNtVkhpyAiuFcMAJvmFKS5IJuTIbWwm7dMFTm0SG2kc7WT3f9bGVbkuVF3SOe2xpKGNu68hOGBJJN8T.5jUGCEFobDOhaao0vXJAWQ07vPp2tjigEypIcEwI6LmTYA1GpCHobyQJgiUETyyxCOFi90uIW1SEO8YQipkH8JOY_4Z5rJu7TDKx5q2J7Bo.Txt6jWxz6LdJt03sgxxdMDkRM4g1byCkNeGA8_Q; _ga=GA1.1.425629984.1791241784; 4Oaf_61d6_cookie_hash=b2669f1952513a3115339ac36375afd4; _clck=16wdu67%5E2%5Ega1%5E0%5E2469; _sharedID=8cb26228-5350-4460-a25f-173a9df95e37; _sharedID_cst=zix7LPQsHA%3D%3D; _iiq_fdata=%7B%22pcid%22%3A%2216f36f6e-a7b1-a7f4-43e1-61aff2dcbfd9%22%2C%22pcidDate%22%3A1791241785665%7D; hb_insticator_uid=d2e85e55-03cc-4522-89b1-5b2794858db7; _pubcid=72ea05e5-83d4-443d-9d15-9753ff9ffd5a; _cc_id=2034912a6b2a1756e330dc69f20bc3e9; panoramaId_expiry=1791846587021; panoramaId=712f1f891f1fabca5c592cc645e7185ca02c72e1581bfac13c1794e7a45e01d0; panoramaIdType=panoDevice; __gads=ID=f5e7d2f7340ef05b:T=1791241786:RT=1791241786:S=ALNI_Mas8XY4DJs2tj3uhEEyaZ7ERc-Rjw; __gpi=UID=000015409624e7a9:T=1791241786:RT=1791241786:S=ALNI_MZBWqnikX6r-Ej_gcNw1zrNlrlcHw; __eoi=ID=73657c68115812cd:T=1791241786:RT=1791241786:S=AA-AfjaiMzkQQXM537nWcsP8Nb1r; FCCDCF=%5Bnull%2Cnull%2Cnull%2Cnull%2Cnull%2Cnull%2C%5B%5B32%2C%22%5B%5C%229e828b9d-820f-4238-a140-6ba182ab842a%5C%22%2C%5B1791241786%2C629000000%5D%5D%22%5D%2C%5B13%2C%22%5B%5C%22DBABL~BVQqAAAAAg%5C%22%2C%5B%5B7%2C%5B1791241786%2C658605000%5D%5D%5D%5D%22%5D%5D%5D; FCNEC=%5B%5B%22AKsRol8A3axbJZFwO2OIqZki-5Vea7UTR3UgJJ92gaNBBK6hJNP9I7wySB6OCkDQUqF5f4aL9uSFAWc0e1t6fDF9Y9_jhs0Chno8Y5d4yVZrPmpSU8wM4A668goUuFE541RF09uvI1pWHqazcLggoQWhY4AGcBMUbw%3D%3D%22%5D%5D; cto_bundle=cIMsvl9DMjIybVdJWXJGaDZZbzVBazZrJTJCY1EwaVhPYnBmc3l6bW9abGpra0tYbTd0T0dkQXpKSzVFZ2oxeThnalpZRDlLcFVtYllYMU5EZ01hZVVXQjVHSTlTa2xrZGFlOFRMcDB6VHpLdmMzbXVya2psMkdSd2dJdlVYQVA1ZWpGbzlLWHRJVjZIaVk4eTV2b2U4OTV4VUVSQSUzRCUzRA; g_state={"i_l":0,"i_ll":1791241797433,"i_b":"mOpZkwi8cbWB6ckgd2IJIB0rUBfa8AqxfN889dd600w","i_e":{"enable_itp_optimization":24},"i_et":1791241797433}; 4Oaf_61d6_saltkey=R5IP1PSs; 4Oaf_61d6_auth=3ae3PdqgsAIEHiZyshEyq6kF%2BqLnXE7ZWNiyqgdrXbDcSI6r%2FhuDFkYgSwhVxhVcH94YLMOnTd5TLfMlWQLNU4xXPj2X; 4Oaf_61d6_cuid=1347244; 4Oaf_61d6_forum_ui=1; _ga_1ZWTYYZSGN=GS2.1.s1791241784$o1$g1$t1791241985$j60$l0$h0; _clsk=1ndedib%5E1791241986257%5E6%5E1%5Ek.clarity.ms%2Fcollect }}
+          CAPTCHA_KEY: ${{ secrets.CAPTCHA_KEY }}
+          USERNAME: ""
+          PASSWORD: ""
+          TIMEOUT: 20
+          MIN_WAIT: 1.0
+          MAX_WAIT: 3.0
         run: |
           sleep $((RANDOM % 300))  # 随机延迟 0～300 秒
           python -m scripts.run_sign
