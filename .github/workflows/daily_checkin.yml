@@ -32,17 +32,20 @@ jobs:
       - name: 安装依赖
         run: pip install -r requirements.txt
       - name: 生成 config.toml
+        env:
+          MY_COOKIES: ${{ secrets.COOKIES }}
+          MY_CAPTCHA_KEY: ${{ secrets.CAPTCHA_KEY }}
+          MY_PASSWORD: ${{ secrets.PASSWORD }}
         run: |
-          cat > config.toml << 'EOF'
-          cookie = """${{ secrets.COOKIES }}"""
-          captcha_key = "${{ secrets.CAPTCHA_KEY }}"
-          username = "${{ env.USERNAME }}"
-          password = "${{ secrets.PASSWORD }}"
+          cat << EOF > config.toml
+          cookie = """$MY_COOKIES"""
+          captcha_key = "$MY_CAPTCHA_KEY"
+          username = "$USERNAME"
+          password = "$MY_PASSWORD"
           timeout  = 20
           min_wait = 1.0
           max_wait = 3.0
           EOF
-
       - name: 执行签到脚本
         run: |
           sleep $((RANDOM % 300))  # 随机延迟 0～300 秒
