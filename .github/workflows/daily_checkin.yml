@@ -31,41 +31,22 @@ jobs:
 
       - name: 安装依赖
         run: pip install -r requirements.txt
+
       - name: 生成 config.toml
-        env:
-          MY_COOKIES: ${{ secrets.COOKIES }}
-          MY_CAPTCHA_KEY: ${{ secrets.CAPTCHA_KEY }}
-          MY_PASSWORD: ${{ secrets.PASSWORD }}
         run: |
-          python -c '
-          import os
+          cat > config.toml <<EOF
+          cookie = "${{ secrets.COOKIES }}"
+          captcha_key = "${{ secrets.CAPTCHA_KEY }}"
+          username = "${{ env.USERNAME }}"
+          password = "${{ secrets.PASSWORD }}"
+          timeout  = 20
+          min_wait = 1.0
+          max_wait = 3.0
+          EOF
+      
+      - name: 输出配置 log
+        run: cat config.toml
 
-          # Clean up any potential "Cookie: " prefix accidentally copied from Safari
-          raw_cookie = os.environ.get("MY_COOKIES", "").strip()
-          if raw_cookie.lower().startswith("cookie:"):
-              raw_cookie = raw_cookie[7:].strip()
-
-          # Build a clean python dictionary mapping to the configuration structure
-          config_dict = {
-              "cookie": raw_cookie,
-              "captcha_key": os.environ.get("MY_CAPTCHA_KEY", ""),
-              "username": os.environ.get("USERNAME", ""),
-              "password": os.environ.get("MY_PASSWORD", ""),
-              "timeout": 20,
-              "min_wait": 1.0,
-              "max_wait": 3.0
-          }
-
-          # Write out properly formatted TOML fields manually to guarantee structural validity
-          with open("config.toml", "w", encoding="utf-8") as f:
-              for key, val in config_dict.items():
-                  if isinstance(val, str):
-                      # Use a python double-quote escape sequence representation for safest translation
-                      escaped_val = val.replace("\\", "\\\\").replace("\"", "\\\"")
-                      f.write(f"{key} = \"{escaped_val}\"\n")
-                  else:
-                      f.write(f"{key} = {val}\n")
-          '
       - name: 执行签到脚本
         run: |
           sleep $((RANDOM % 300))  # 随机延迟 0～300 秒
